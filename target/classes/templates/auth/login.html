@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Đăng nhập</title>
+</head>
+<body>
+<main layout:fragment="content">
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <h2>IOTSTAR SHOP</h2>
+            <p class="subtitle">Đăng nhập vào hệ thống</p>
+
+            <!-- Success Message -->
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+            <!-- Error Messages -->
+            <div th:if="${param.error}" class="alert alert-danger">
+                Username/Email hoặc Password không chính xác!
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success">
+                Bạn đã đăng xuất thành công.
+            </div>
+
+            <!-- Custom Login Form -->
+            <form th:action="@{/login}" method="post">
+                <div class="form-group">
+                    <label for="login">Username hoặc Email</label>
+                    <input type="text" id="login" name="login" class="form-control"
+                           placeholder="Nhập username hoặc email" required autofocus />
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mật khẩu</label>
+                    <input type="password" id="password" name="password" class="form-control"
+                           placeholder="Nhập mật khẩu" required />
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Đăng nhập</button>
+            </form>
+
+            <div class="auth-links">
+                <p><a th:href="@{/register}">Chưa có tài khoản? Đăng ký ngay</a></p>
+                <p style="margin-top: 6px;"><a th:href="@{/forgot-password}">Quên mật khẩu?</a></p>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

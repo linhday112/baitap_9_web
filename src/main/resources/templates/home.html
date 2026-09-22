@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Trang chủ Dashboard</title>
+</head>
+<body>
+<main layout:fragment="content">
+    <div class="container">
+
+        <!-- Welcome Banner -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Trang chủ UTEShop</h1>
+                <p style="color: #64748b;">
+                    Xin chào 
+                    <strong th:if="${#authorization.expression('isAuthenticated()')}" 
+                            th:text="${#authentication.principal.fullName}">Khách</strong>
+                    <span th:unless="${#authorization.expression('isAuthenticated()')}">Khách vãng lai</span>!
+                </p>
+            </div>
+            <div>
+                <a th:href="@{/products/add}" sec:authorize="isAuthenticated()" class="btn btn-primary">+ Thêm Sản Phẩm Mới</a>
+            </div>
+        </div>
+
+        <!-- Dashboard Statistics Cards -->
+        <div class="cards-grid">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-title">Tổng số Người dùng</div>
+                    <div class="stat-number" th:text="${totalUsers}">0</div>
+                </div>
+                <div style="font-size: 32px; color: #94a3b8;">👥</div>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <div class="stat-title">Tổng số Sản phẩm</div>
+                    <div class="stat-number" th:text="${totalProducts}">0</div>
+                </div>
+                <div style="font-size: 32px; color: #94a3b8;">📦</div>
+            </div>
+
+            <div class="stat-card" sec:authorize="isAuthenticated()">
+                <div>
+                    <div class="stat-title">Sản phẩm của bạn</div>
+                    <div class="stat-number" th:text="${userProductsCount}">0</div>
+                </div>
+                <div style="font-size: 32px; color: #94a3b8;">🏷️</div>
+            </div>
+        </div>
+
+        <!-- Quick Access Section -->
+        <div class="form-card" style="max-width: 100%; margin-top: 20px;">
+            <h3 style="margin-bottom: 12px;">Hệ Thống Quản Lý Spring Boot Security</h3>
+            <p style="color: #475569; margin-bottom: 16px;">
+                Ứng dụng này sử dụng kiến trúc Spring Boot 3 + Spring Security 6/7, tích hợp MapStruct DTO Mapping, 
+                xác thực Login bằng Email/Username và phân quyền chuẩn vai trò Role User / Admin.
+            </p>
+            <div style="display: flex; gap: 12px;">
+                <a th:href="@{/products}" class="btn btn-secondary">Xem Danh Sách Sản Phẩm</a>
+                <a th:href="@{/users}" sec:authorize="hasRole('ADMIN')" class="btn btn-primary">Quản Lý Người Dùng (Admin)</a>
+            </div>
+        </div>
+
+    </div>
+</main>
+</body>
+</html>

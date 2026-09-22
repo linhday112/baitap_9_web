@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<header th:fragment="header" class="topbar">
+    <div class="brand">
+        <a th:href="@{/}">IOTSTAR SHOP</a>
+    </div>
+
+    <nav>
+        <a th:href="@{/}">Trang chủ</a>
+        <a th:href="@{/products}" sec:authorize="isAuthenticated()">Sản phẩm</a>
+        <a th:href="@{/users}" sec:authorize="hasRole('ADMIN')">Quản lý User</a>
+    </nav>
+
+    <div class="account">
+        <!-- Logged In User Info -->
+        <div th:if="${#authorization.expression('isAuthenticated()')}" class="account-info">
+            <!-- User Avatar -->
+            <img th:src="${#authentication.principal.images != null and !#strings.isEmpty(#authentication.principal.images) ? #authentication.principal.images : '/images/avatar-default.png'}"
+                 alt="Avatar" class="user-avatar" />
+
+            <div class="user-details">
+                <span class="user-fullname" th:text="${#authentication.principal.fullName}">Full Name</span>
+                <span style="color: #cbd5e1; font-size: 11px;">
+                    (<span th:text="${#authentication.principal.username}">username</span>) - 
+                    <span th:text="${#authentication.principal.email}">email@domain.com</span>
+                </span>
+                <span class="user-role-badge" th:text="${#authentication.principal.role}">ROLE_USER</span>
+            </div>
+
+            <!-- Logout Form -->
+            <form th:action="@{/logout}" method="post" style="display:inline; margin-left: 10px;">
+                <button type="submit" class="btn-logout">Đăng xuất</button>
+            </form>
+        </div>
+
+        <!-- Anonymous Guest Links -->
+        <div th:unless="${#authorization.expression('isAuthenticated()')}">
+            <a th:href="@{/login}" class="btn btn-secondary btn-sm" style="margin-right: 8px;">Đăng nhập</a>
+            <a th:href="@{/register}" class="btn btn-primary btn-sm">Đăng ký</a>
+        </div>
+    </div>
+</header>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Quản lý người dùng</title>
+</head>
+<body>
+<main layout:fragment="content">
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Quản Lý Người Dùng (Admin)</h1>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+        <!-- Search Form -->
+        <form th:action="@{/users}" method="get" class="search-form">
+            <input type="text" name="keyword" th:value="${keyword}" class="form-control" placeholder="Tìm theo Username, Email, Họ tên..." />
+            <button type="submit" class="btn btn-secondary">Tìm kiếm</button>
+            <a th:href="@{/users}" th:if="${keyword != null and !keyword.isEmpty()}" class="btn btn-warning">Xóa tìm kiếm</a>
+        </form>
+
+        <!-- User Table -->
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Avatar</th>
+                        <th>Họ và Tên</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Vai Trò (Role)</th>
+                        <th>Số SP Đăng</th>
+                        <th>Trạng Thái</th>
+                        <th>Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="user : ${userPage.content}">
+                        <td th:text="${user.id}">1</td>
+                        <td>
+                            <img th:src="${user.images != null and !#strings.isEmpty(user.images) ? user.images : '/images/avatar-default.png'}"
+                                 alt="Avatar" class="table-img" style="border-radius: 50%;" />
+                        </td>
+                        <td><strong th:text="${user.fullName}">Nguyễn Văn A</strong></td>
+                        <td th:text="${user.username}">user01</td>
+                        <td th:text="${user.email}">user01@gmail.com</td>
+                        <td>
+                            <span class="user-role-badge" th:text="${user.roleName}">ROLE_USER</span>
+                        </td>
+                        <td th:text="${user.productCount}">0</td>
+                        <td>
+                            <span th:if="${user.enabled}" class="btn btn-sm btn-primary" style="background-color: #16a34a;">Hoạt động</span>
+                            <span th:unless="${user.enabled}" class="btn btn-sm btn-danger">Bị khóa</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/users/edit/{id}(id=${user.id})}" class="btn btn-secondary btn-sm" style="margin-right: 4px;">Sửa</a>
+                            <a th:href="@{/users/delete/{id}(id=${user.id})}" class="btn btn-danger btn-sm"
+                               onclick="return confirm('Bạn có chắc chắn muốn xóa người dùng này?');">Xóa</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(userPage.content)}">
+                        <td colspan="9" style="text-align: center; color: #64748b; padding: 24px;">Không tìm thấy người dùng nào.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div th:if="${totalPages > 1}">
+            <ul class="pagination">
+                <li th:class="${currentPage == 0} ? 'disabled' : ''">
+                    <a th:href="@{/users(page=0, keyword=${keyword})}">« Đầu</a>
+                </li>
+                <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                    th:class="${currentPage == i} ? 'active' : ''">
+                    <a th:href="@{/users(page=${i}, keyword=${keyword})}" th:text="${i + 1}">1</a>
+                </li>
+                <li th:class="${currentPage == totalPages - 1} ? 'disabled' : ''">
+                    <a th:href="@{/users(page=${totalPages - 1}, keyword=${keyword})}">Cuối »</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Đăng ký tài khoản</title>
+</head>
+<body>
+<main layout:fragment="content">
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <h2>Tạo tài khoản mới</h2>
+            <p class="subtitle">Vui lòng điền thông tin bên dưới</p>
+
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+            <form th:action="@{/register}" th:object="${registerDTO}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="fullName">Họ và tên</label>
+                    <input type="text" id="fullName" th:field="*{fullName}" class="form-control"
+                           placeholder="Ví dụ: Nguyễn Văn A" required />
+                    <p class="error-text" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></p>
+                </div>
+
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" th:field="*{username}" class="form-control"
+                           placeholder="Ví dụ: nguyenvana" required />
+                    <p class="error-text" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></p>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" th:field="*{email}" class="form-control"
+                           placeholder="Ví dụ: email@gmail.com" required />
+                    <p class="error-text" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mật khẩu</label>
+                    <input type="password" id="password" th:field="*{password}" class="form-control"
+                           placeholder="Nhập mật khẩu" required />
+                    <p class="error-text" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
+                </div>
+
+                <div class="form-group">
+                    <label for="imageFile">Hình ảnh Avatar</label>
+                    <input type="file" id="imageFile" th:field="*{imageFile}" class="form-control" accept="image/*" />
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Đăng ký tài khoản</button>
+            </form>
+
+            <div class="auth-links">
+                <p>Đã có tài khoản? <a th:href="@{/login}">Đăng nhập ngay</a></p>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
