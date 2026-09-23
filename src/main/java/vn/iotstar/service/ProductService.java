@@ -1,24 +1,15 @@
 package vn.iotstar.service;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 import vn.iotstar.dto.ProductDTO;
 
-import java.io.IOException;
-
 public interface ProductService {
-
-    Page<ProductDTO> findAll(String keyword, Pageable pageable);
-
+    Page<ProductDTO> findAll(String keyword, int page, int size);
     ProductDTO findById(Long id);
-
-    ProductDTO createProduct(ProductDTO productDTO) throws IOException;
-
-    ProductDTO updateProduct(Long id, ProductDTO productDTO) throws IOException;
-
-    void deleteProduct(Long id);
-
-    long countTotalProducts();
-
-    long countProductsByUserId(Long userId);
+    ProductDTO create(ProductDTO dto, MultipartFile image);
+    ProductDTO update(Long id, ProductDTO dto, MultipartFile image);
+    void delete(Long id);
+    long countProducts();
+    long countByUser(Long userId);
 }

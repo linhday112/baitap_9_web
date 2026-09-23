@@ -7,124 +7,121 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import vn.iotstar.dto.RegisterDTO;
-import vn.iotstar.dto.ResetPasswordDTO;
+import vn.iotstar.dto.*;
 import vn.iotstar.service.AuthService;
+import vn.iotstar.service.OtpService;
 
 @Controller
 @RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
+    private final OtpService otpService;
 
     @GetMapping("/login")
-    public String loginPage() {
+    public String login() {
         return "auth/login";
     }
 
     @GetMapping("/register")
-    public String registerPage(Model model) {
+    public String register(Model model) {
         model.addAttribute("registerDTO", new RegisterDTO());
         return "auth/register";
     }
 
     @PostMapping("/register")
-    public String processRegister(
-            @Valid @ModelAttribute("registerDTO") RegisterDTO registerDTO,
-            BindingResult bindingResult,
-            Model model,
-            RedirectAttributes redirectAttributes
-    ) {
-        if (bindingResult.hasErrors()) {
-            return "auth/register";
-        }
-
+    public String register(@Valid @ModelAttribute RegisterDTO dto,
+                           BindingResult result,
+                           RedirectAttributes redirect) {
+        if (result.hasErrors()) return "auth/register";
         try {
-            authService.register(registerDTO);
-            redirectAttributes.addFlashAttribute("successMessage", "Đăng ký thành công! Vui lòng kiểm tra OTP để xác thực tài khoản.");
-            return "redirect:/verify-otp?email=" + registerDTO.getEmail();
+            authService.register(dto);
+            redirect.addFlashAttribute("success", "Mã OTP đã được gửi đến email " + dto.getEmail() + ". Vui lòng kiểm tra hòm thư!");
+            return "redirect:/verify-otp?email=" + dto.getEmail();
         } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
+            result.reject("register.error", e.getMessage());
             return "auth/register";
         }
     }
 
     @GetMapping("/verify-otp")
-    public String verifyOtpPage(@RequestParam(value = "email", required = false) String email, Model model) {
-        model.addAttribute("email", email);
+    public String verifyPage(@RequestParam(required = false) String email, Model model) {
+        VerifyOtpDTO dto = new VerifyOtpDTO();
+        dto.setEmail(email);
+        model.addAttribute("verifyOtpDTO", dto);
         return "auth/verify-otp";
     }
 
     @PostMapping("/verify-otp")
-    public String processVerifyOtp(
-            @RequestParam("email") String email,
-            @RequestParam("otp") String otp,
-            RedirectAttributes redirectAttributes,
-            Model model
-    ) {
-        boolean isVerified = authService.verifyRegisterOtp(email, otp);
-        if (isVerified) {
-            redirectAttributes.addFlashAttribute("successMessage", "Tài khoản của bạn đã được xác thực thành công! Hãy đăng nhập.");
-            return "redirect:/login";
-        } else {
-            model.addAttribute("errorMessage", "Mã OTP không chính xác hoặc đã hết hạn!");
-            model.addAttribute("email", email);
+    public String verify(@Valid @ModelAttribute VerifyOtpDTO dto,
+                         BindingResult result,
+                         RedirectAttributes redirect) {
+        if (result.hasErrors()) return "auth/verify-otp";
+        if (!authService.verifyRegister(dto.getEmail(), dto.getOtp())) {
+            result.reject("otp.error", "Mã OTP không đúng, đã hết hạn hoặc quá số lần thử.");
             return "auth/verify-otp";
         }
+        redirect.addFlashAttribute("success", "Xác nhận OTP thành công! Bạn có thể đăng nhập ngay.");
+        return "redirect:/login";
+    }
+
+    @PostMapping("/resend-register-otp")
+    public String resend(@RequestParam String email, RedirectAttributes redirect) {
+        otpService.sendRegisterOtp(email);
+        redirect.addFlashAttribute("success", "Đã gửi lại mã OTP thành công.");
+        return "redirect:/verify-otp?email=" + email;
     }
 
     @GetMapping("/forgot-password")
-    public String forgotPasswordPage() {
+    public String forgot(Model model) {
+        model.addAttribute("forgotPasswordDTO", new ForgotPasswordDTO());
         return "auth/forgot-password";
     }
 
     @PostMapping("/forgot-password")
-    public String processForgotPassword(
-            @RequestParam("email") String email,
-            RedirectAttributes redirectAttributes,
-            Model model
-    ) {
+    public String forgot(@Valid @ModelAttribute ForgotPasswordDTO dto,
+                         BindingResult result,
+                         RedirectAttributes redirect) {
+        if (result.hasErrors()) return "auth/forgot-password";
         try {
-            authService.sendForgotPasswordOtp(email);
-            redirectAttributes.addFlashAttribute("successMessage", "Mã OTP khôi phục mật khẩu đã được gửi đến email của bạn.");
-            return "redirect:/reset-password?email=" + email;
+            authService.forgotPassword(dto.getEmail());
+            redirect.addFlashAttribute("email", dto.getEmail());
+            redirect.addFlashAttribute("success", "Mã OTP khôi phục mật khẩu đã được gửi đến email!");
+            return "redirect:/reset-password?email=" + dto.getEmail();
         } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
+            result.reject("forgot.error", e.getMessage());
             return "auth/forgot-password";
         }
     }
 
     @GetMapping("/reset-password")
-    public String resetPasswordPage(@RequestParam(value = "email", required = false) String email, Model model) {
+    public String reset(@RequestParam(required = false) String email, Model model) {
         ResetPasswordDTO dto = new ResetPasswordDTO();
-        dto.setEmail(email);
+        if (email != null && !email.isBlank()) {
+            dto.setEmail(email);
+        } else {
+            Object flashEmail = model.asMap().get("email");
+            if (flashEmail != null) dto.setEmail(flashEmail.toString());
+        }
         model.addAttribute("resetPasswordDTO", dto);
         return "auth/reset-password";
     }
 
     @PostMapping("/reset-password")
-    public String processResetPassword(
-            @Valid @ModelAttribute("resetPasswordDTO") ResetPasswordDTO resetPasswordDTO,
-            BindingResult bindingResult,
-            Model model,
-            RedirectAttributes redirectAttributes
-    ) {
-        if (bindingResult.hasErrors()) {
+    public String reset(@Valid @ModelAttribute ResetPasswordDTO dto,
+                         BindingResult result,
+                         @RequestParam String otp,
+                         RedirectAttributes redirect) {
+        if (!dto.getPassword().equals(dto.getConfirmPassword())) {
+            result.reject("password.error", "Mật khẩu xác nhận không trùng khớp.");
+        }
+        if (result.hasErrors()) return "auth/reset-password";
+        if (!authService.verifyResetOtp(dto.getEmail(), otp)) {
+            result.reject("otp.error", "Mã OTP không đúng hoặc đã hết hạn.");
             return "auth/reset-password";
         }
-
-        boolean success = authService.resetPassword(resetPasswordDTO);
-        if (success) {
-            redirectAttributes.addFlashAttribute("successMessage", "Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.");
-            return "redirect:/login";
-        } else {
-            model.addAttribute("errorMessage", "Mã OTP không đúng hoặc đã hết hạn!");
-            return "auth/reset-password";
-        }
-    }
-
-    @GetMapping("/403")
-    public String accessDenied() {
-        return "403";
+        authService.resetPassword(dto.getEmail(), dto.getPassword());
+        redirect.addFlashAttribute("success", "Đổi mật khẩu thành công! Bạn có thể đăng nhập ngay bằng mật khẩu mới.");
+        return "redirect:/login";
     }
 }

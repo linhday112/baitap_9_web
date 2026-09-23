@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layouts/layout :: head('Có lỗi xảy ra')}"></head>
+<body>
+<div class="auth-wrapper">
+    <div class="auth-box" style="text-align: center;">
+        <div style="font-size: 4rem; margin-bottom: 12px;">⚠️</div>
+        <h1 style="margin-bottom: 12px;">Có lỗi xảy ra</h1>
+        <p th:text="${message}" style="color: var(--danger); font-weight: 600; margin-bottom: 24px;">Message</p>
+        <a class="btn btn-primary" th:href="@{/}">
+            <span>🏠</span> Quay về trang chủ
+        </a>
+    </div>
+</div>
+</body>
+</html>

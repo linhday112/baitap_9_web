@@ -1,43 +1,25 @@
 package vn.iotstar.dto;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import jakarta.validation.constraints.*;
+import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Data
 public class ProductDTO {
-
     private Long id;
 
     @NotBlank(message = "Tên sản phẩm không được để trống")
     private String name;
 
-    @NotBlank(message = "Thương hiệu không được để trống")
-    private String brand;
+    private String description;
 
-    @NotBlank(message = "Xuất xứ không được để trống")
-    private String madein;
-
-    @NotNull(message = "Giá sản phẩm không được để trống")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Giá sản phẩm phải lớn hơn 0")
+    @NotNull(message = "Giá không được để trống")
+    @DecimalMin(value = "0.0", message = "Giá phải >= 0")
     private BigDecimal price;
 
-    private String images;
-
-    private MultipartFile imageFile;
-
+    private String imageUrl;
     private Long userId;
-
-    private String userFullName;
-
-    private LocalDateTime createdAt;
+    private String username;
+    private MultipartFile image;
 }

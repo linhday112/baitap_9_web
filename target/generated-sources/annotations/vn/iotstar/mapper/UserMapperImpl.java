@@ -8,31 +8,28 @@ import vn.iotstar.entity.User;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-09-22T09:58:53+0700",
+    date = "2026-09-23T17:23:40+0700",
     comments = "version: 1.6.3, compiler: javac, environment: Java 22 (Oracle Corporation)"
 )
 @Component
 public class UserMapperImpl implements UserMapper {
 
     @Override
-    public UserDTO toDto(User entity) {
+    public UserDTO toDTO(User entity) {
         if ( entity == null ) {
             return null;
         }
 
-        UserDTO.UserDTOBuilder userDTO = UserDTO.builder();
+        UserDTO userDTO = new UserDTO();
 
-        userDTO.roleId( entityRoleId( entity ) );
-        userDTO.roleName( entityRoleName( entity ) );
-        userDTO.id( entity.getId() );
-        userDTO.username( entity.getUsername() );
-        userDTO.email( entity.getEmail() );
-        userDTO.fullName( entity.getFullName() );
-        userDTO.images( entity.getImages() );
-        userDTO.enabled( entity.isEnabled() );
-        userDTO.createdAt( entity.getCreatedAt() );
+        userDTO.setRoleName( entityRoleName( entity ) );
+        userDTO.setId( entity.getId() );
+        userDTO.setUsername( entity.getUsername() );
+        userDTO.setEmail( entity.getEmail() );
+        userDTO.setFullName( entity.getFullName() );
+        userDTO.setEnabled( entity.isEnabled() );
 
-        return userDTO.build();
+        return userDTO;
     }
 
     @Override
@@ -47,19 +44,9 @@ public class UserMapperImpl implements UserMapper {
         user.username( dto.getUsername() );
         user.email( dto.getEmail() );
         user.fullName( dto.getFullName() );
-        user.images( dto.getImages() );
         user.enabled( dto.isEnabled() );
-        user.createdAt( dto.getCreatedAt() );
 
         return user.build();
-    }
-
-    private Long entityRoleId(User user) {
-        Role role = user.getRole();
-        if ( role == null ) {
-            return null;
-        }
-        return role.getId();
     }
 
     private String entityRoleName(User user) {

@@ -1,21 +1,17 @@
 package vn.iotstar.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import vn.iotstar.dto.ProductDTO;
 import vn.iotstar.entity.Product;
 import vn.iotstar.entity.User;
 import vn.iotstar.mapper.ProductMapper;
 import vn.iotstar.repository.ProductRepository;
 import vn.iotstar.repository.UserRepository;
-import vn.iotstar.service.FileUploadService;
-import vn.iotstar.service.ProductService;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
+import vn.iotstar.service.*;
 
 @Service
 @RequiredArgsConstructor
@@ -23,85 +19,81 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
-    private final ProductMapper productMapper;
-    private final FileUploadService fileUploadService;
+    private final ProductMapper mapper;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductDTO> findAll(String keyword, Pageable pageable) {
-        Page<Product> products;
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            products = productRepository.findByNameContainingIgnoreCaseOrBrandContainingIgnoreCaseOrMadeinContainingIgnoreCase(
-                    keyword.trim(), keyword.trim(), keyword.trim(), pageable);
-        } else {
-            products = productRepository.findAll(pageable);
-        }
-        return products.map(productMapper::toDto);
+    public Page<ProductDTO> findAll(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(
+            Math.max(page, 0), Math.max(size, 1),
+            Sort.by(Sort.Direction.DESC, "id")
+        );
+        return productRepository.search(keyword == null ? "" : keyword, pageable)
+            .map(mapper::toDTO);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProductDTO findById(Long id) {
+        return mapper.toDTO(productRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Product không tồn tại")));
+    }
+
+    @Override
+    @Transactional
+    public ProductDTO create(ProductDTO dto, MultipartFile image) {
+        User user = userRepository.findById(dto.getUserId())
+            .orElseThrow(() -> new IllegalArgumentException("User không tồn tại"));
+        Product product = mapper.toEntity(dto);
+        product.setUser(user);
+        if (image != null && !image.isEmpty()) {
+            CloudinaryUploadResult r = cloudinaryService.upload(image);
+            product.setImageUrl(r.url() + "|" + r.publicId());
+        }
+        return mapper.toDTO(productRepository.save(product));
+    }
+
+    @Override
+    @Transactional
+    public ProductDTO update(Long id, ProductDTO dto, MultipartFile image) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm với ID: " + id));
-        return productMapper.toDto(product);
+            .orElseThrow(() -> new IllegalArgumentException("Product không tồn tại"));
+        product.setName(dto.getName());
+        product.setDescription(dto.getDescription());
+        product.setPrice(dto.getPrice());
+        if (image != null && !image.isEmpty()) {
+            String old = product.getImageUrl();
+            if (old != null && old.contains("|")) {
+                cloudinaryService.delete(old.substring(old.indexOf('|') + 1));
+            }
+            CloudinaryUploadResult r = cloudinaryService.upload(image);
+            product.setImageUrl(r.url() + "|" + r.publicId());
+        }
+        return mapper.toDTO(productRepository.save(product));
     }
 
     @Override
     @Transactional
-    public ProductDTO createProduct(ProductDTO productDTO) throws IOException {
-        Product product = productMapper.toEntity(productDTO);
-        product.setCreatedAt(LocalDateTime.now());
-
-        if (productDTO.getImageFile() != null && !productDTO.getImageFile().isEmpty()) {
-            String imagePath = fileUploadService.saveFile(productDTO.getImageFile());
-            product.setImages(imagePath);
-        }
-
-        if (productDTO.getUserId() != null) {
-            User user = userRepository.findById(productDTO.getUserId()).orElse(null);
-            product.setUser(user);
-        }
-
-        Product savedProduct = productRepository.save(product);
-        return productMapper.toDto(savedProduct);
-    }
-
-    @Override
-    @Transactional
-    public ProductDTO updateProduct(Long id, ProductDTO productDTO) throws IOException {
+    public void delete(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm với ID: " + id));
-
-        product.setName(productDTO.getName());
-        product.setBrand(productDTO.getBrand());
-        product.setMadein(productDTO.getMadein());
-        product.setPrice(productDTO.getPrice());
-
-        if (productDTO.getImageFile() != null && !productDTO.getImageFile().isEmpty()) {
-            String imagePath = fileUploadService.saveFile(productDTO.getImageFile());
-            product.setImages(imagePath);
+            .orElseThrow(() -> new IllegalArgumentException("Product không tồn tại"));
+        String image = product.getImageUrl();
+        if (image != null && image.contains("|")) {
+            cloudinaryService.delete(image.substring(image.indexOf('|') + 1));
         }
-
-        Product updatedProduct = productRepository.save(product);
-        return productMapper.toDto(updatedProduct);
-    }
-
-    @Override
-    @Transactional
-    public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
+        productRepository.delete(product);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long countTotalProducts() {
+    public long countProducts() {
         return productRepository.count();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long countProductsByUserId(Long userId) {
+    public long countByUser(Long userId) {
         return productRepository.countByUserId(userId);
     }
 }

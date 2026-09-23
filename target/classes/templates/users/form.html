@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layouts/layout :: head(${mode == 'create' ? 'Thêm User mới' : 'Sửa thông tin User'})}"></head>
+<body>
+<div th:replace="~{layouts/layout :: page(~{::main})}">
+<main>
+    <div class="form-card-wrapper">
+        <div class="page-title-group" style="margin-bottom: 1.5rem; text-align: center;">
+            <h1 class="page-title" style="justify-content: center;" th:text="${mode == 'create' ? '👤 Thêm User mới' : '✏️ Chỉnh sửa User'}"></h1>
+            <p class="page-subtitle">Nhập đầy đủ thông tin tài khoản người dùng bên dưới</p>
+        </div>
+
+        <form th:object="${userDTO}" 
+              method="post" 
+              accept-charset="UTF-8" 
+              th:action="${mode == 'create'} ? @{/users/create} : @{/users/edit/{id}(id=${userDTO.id})}">
+
+            <div class="form-group">
+                <label for="username" class="form-label">Username <span style="color:#ef4444;">*</span></label>
+                <input id="username" type="text" th:field="*{username}" class="form-control" placeholder="Tên đăng nhập...">
+                <span class="error-text" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">Địa chỉ Email <span style="color:#ef4444;">*</span></label>
+                <input id="email" type="email" th:field="*{email}" class="form-control" placeholder="example@gmail.com">
+                <span class="error-text" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="fullName" class="form-label">Họ và Tên <span style="color:#ef4444;">*</span></label>
+                <input id="fullName" type="text" th:field="*{fullName}" class="form-control" placeholder="Nguyễn Văn A...">
+                <span class="error-text" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="roleName" class="form-label">Phân quyền Vai trò (Role)</label>
+                <select id="roleName" th:field="*{roleName}" class="form-control">
+                    <option value="ROLE_USER">USER (Người dùng thông thường)</option>
+                    <option value="ROLE_ADMIN">ADMIN (Quản trị viên)</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 1rem;">
+                <input type="checkbox" id="enabled" th:field="*{enabled}" style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
+                <label for="enabled" style="margin: 0; cursor: pointer;">Kích hoạt tài khoản (Enabled)</label>
+            </div>
+
+            <div class="note" th:if="${mode == 'create'}">
+                📌 <strong>Lưu ý:</strong> Mật khẩu mặc định khởi tạo cho tài khoản do Admin tạo là: <b>123456</b>.
+            </div>
+
+            <div class="form-actions" style="justify-content: flex-end;">
+                <a class="btn btn-secondary" th:href="@{/users}">Hủy bỏ</a>
+                <button type="submit" class="btn btn-primary">
+                    <span>💾</span> Lưu thông tin
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+</div>
+</body>
+</html>

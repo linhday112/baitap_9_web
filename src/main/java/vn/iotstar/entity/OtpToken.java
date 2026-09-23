@@ -2,44 +2,42 @@ package vn.iotstar.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "otp_tokens")
+@Table(name = "otp_tokens",
+    indexes = @Index(name = "idx_otp_email_type", columnList = "email,type"))
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OtpToken implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    public enum OtpType {
-        REGISTER,
-        FORGOT_PASSWORD
-    }
+public class OtpToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 10)
-    private String token;
-
     @Column(nullable = false, length = 150)
     private String email;
 
-    @Column(name = "expiry_date", nullable = false)
-    private LocalDateTime expiryDate;
+    @Column(nullable = false, length = 100)
+    private String otpHash;
+
+    @Column(nullable = false, length = 30)
+    private String type;
 
     @Column(nullable = false)
+    private LocalDateTime expiresAt;
+
+    @Column(nullable = false)
+    private int attempts;
+
     @Builder.Default
+    @Column(nullable = false)
     private boolean used = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private OtpType type;
+    @Builder.Default
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

@@ -1,26 +1,16 @@
 <!DOCTYPE html>
-<html lang="vi"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
-<head>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title layout:title-pattern="$CONTENT_TITLE - IOTSTAR SHOP">IOTSTAR SHOP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title ?: 'IOTSTAR SHOP'}">IOTSTAR SHOP</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-
-    <!-- Dynamic Header Fragment -->
+<div th:fragment="page(content)">
     <header th:replace="~{fragments/header :: header}"></header>
-
-    <!-- Main Dynamic Content -->
-    <main layout:fragment="content">
-    </main>
-
-    <!-- Footer -->
-    <footer>
-        <p>Copyright &copy; 2026 IOTSTAR SHOP - Hướng Dẫn Spring Boot & Spring Security</p>
-    </footer>
-
+    <main class="container" th:replace="${content}"></main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+</div>
 </body>
 </html>

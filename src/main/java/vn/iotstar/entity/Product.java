@@ -2,46 +2,40 @@ package vn.iotstar.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "products")
+@Table(name = "products",
+    indexes = @Index(name = "idx_products_name", columnList = "name"))
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Product implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, length = 2000, columnDefinition = "nvarchar(500)")
     private String name;
 
-    @Column(length = 100)
-    private String brand;
+    @Column(length = 5000, columnDefinition = "nvarchar(500)")
+    private String description;
 
-    @Column(name = "made_in", length = 100)
-    private String madein;
-
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal price;
 
-    @Column(length = 500)
-    private String images;
+    @Column(length = 1000)
+    private String imageUrl;
 
-    @Column(name = "created_at", nullable = false)
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

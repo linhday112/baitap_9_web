@@ -1,86 +1,117 @@
 <!DOCTYPE html>
-<html lang="vi"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      layout:decorate="~{layouts/layout}">
-<head>
-    <title>Danh sách sản phẩm</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layouts/layout :: head('Quản lý Products')}"></head>
 <body>
-<main layout:fragment="content">
-    <div class="container">
-        <div class="page-header">
-            <h1 class="page-title">Quản Lý Sản Phẩm</h1>
-            <a th:href="@{/products/add}" sec:authorize="isAuthenticated()" class="btn btn-primary">+ Thêm Sản Phẩm Mới</a>
+<div th:replace="~{layouts/layout :: page(~{::main})}">
+<main>
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-title-group">
+            <h1 class="page-title">
+                <span>📦</span> Quản lý Products
+            </h1>
+            <p class="page-subtitle">Quản lý và xem danh sách các sản phẩm bán trong hệ thống</p>
         </div>
+        <a class="btn btn-primary" th:href="@{/products/create}">
+            <span>➕</span> Thêm Product mới
+        </a>
+    </div>
 
-        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+    <!-- Alert Notifications -->
+    <div th:if="${success}" class="alert-box alert-success" th:text="${success}"></div>
 
-        <!-- Search Bar -->
+    <!-- Toolbar & Search -->
+    <div class="toolbar-bar">
         <form th:action="@{/products}" method="get" class="search-form">
-            <input type="text" name="keyword" th:value="${keyword}" class="form-control" placeholder="Tìm theo tên, thương hiệu, xuất xứ..." />
-            <button type="submit" class="btn btn-secondary">Tìm kiếm</button>
-            <a th:href="@{/products}" th:if="${keyword != null and !keyword.isEmpty()}" class="btn btn-warning">Xóa tìm kiếm</a>
+            <div class="input-group">
+                <span class="input-icon">🔍</span>
+                <input name="keyword" th:value="${keyword}" placeholder="Tìm theo tên sản phẩm, mô tả..." class="search-input">
+            </div>
+            <input type="hidden" name="size" th:value="${size}">
+            <button class="btn btn-secondary" type="submit">Tìm kiếm</button>
         </form>
+    </div>
 
-        <!-- Product Table -->
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Hình Ảnh</th>
-                        <th>Tên Sản Phẩm</th>
-                        <th>Thương Hiệu</th>
-                        <th>Xuất Xứ</th>
-                        <th>Giá Bán (VNĐ)</th>
-                        <th>Người Đăng</th>
-                        <th sec:authorize="isAuthenticated()">Hành Động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="product : ${productPage.content}">
-                        <td th:text="${product.id}">1</td>
-                        <td>
-                            <img th:src="${product.images != null and !#strings.isEmpty(product.images) ? product.images : '/images/phone.png'}"
-                                 alt="Product Image" class="table-img" />
-                        </td>
-                        <td><strong th:text="${product.name}">Tên SP</strong></td>
-                        <td th:text="${product.brand}">Brand</td>
-                        <td th:text="${product.madein}">Made in</td>
-                        <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'" style="color: #2563eb; font-weight: bold;">0 VNĐ</td>
-                        <td th:text="${product.userFullName != null ? product.userFullName : 'Hệ thống'}">Admin</td>
-                        <td sec:authorize="isAuthenticated()">
-                            <a th:href="@{/products/edit/{id}(id=${product.id})}" class="btn btn-secondary btn-sm" style="margin-right: 4px;">Sửa</a>
-                            <a th:href="@{/products/delete/{id}(id=${product.id})}" class="btn btn-danger btn-sm"
-                               onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');">Xóa</a>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(productPage.content)}">
-                        <td colspan="8" style="text-align: center; color: #64748b; padding: 24px;">Không tìm thấy sản phẩm nào.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <!-- Data Table Container -->
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th style="width: 80px;">ID</th>
+                    <th style="width: 90px;">Ảnh</th>
+                    <th>Tên Sản Phẩm</th>
+                    <th style="width: 160px;">Giá Bán</th>
+                    <th style="width: 160px;">Người Tạo</th>
+                    <th style="width: 150px; text-align: center;">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="p : ${products.content}">
+                    <td style="font-weight: 700; color: #64748b;" th:text="${'#' + p.id}">#1</td>
+                    <td>
+                        <img th:if="${p.imageUrl != null}" 
+                             th:src="${#strings.contains(p.imageUrl, '|') ? #strings.substringBefore(p.imageUrl, '|') : p.imageUrl}" 
+                             class="product-img-thumb" alt="Product Image">
+                        <span th:unless="${p.imageUrl != null}" class="badge badge-inactive">Chưa có ảnh</span>
+                    </td>
+                    <td>
+                        <strong th:text="${p.name}" style="color: #0f172a; font-size: 0.95rem;">Tên sản phẩm</strong>
+                        <p th:if="${p.description != null}" 
+                           th:text="${#strings.abbreviate(p.description, 60)}" 
+                           style="color: #64748b; font-size: 0.8rem; margin-top: 2px;"></p>
+                    </td>
+                    <td>
+                        <span class="price-tag" th:text="${#numbers.formatDecimal(p.price, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}">0 VNĐ</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-role" th:text="${'👤 ' + p.username}">admin</span>
+                    </td>
+                    <td>
+                        <div class="actions-cell" style="justify-content: center;">
+                            <a class="btn btn-secondary btn-sm" th:href="@{/products/edit/{id}(id=${p.id})}">
+                                <span>✏️</span> Sửa
+                            </a>
+                            <form th:action="@{/products/delete/{id}(id=${p.id})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')" style="display:inline;">
+                                <button class="btn btn-danger btn-sm" type="submit">
+                                    <span>🗑️</span> Xóa
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <!-- Empty State -->
+                <tr th:if="${products.empty}">
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-icon">📦</div>
+                            <div class="empty-title">Chưa có sản phẩm nào</div>
+                            <p class="empty-text">Hiện chưa tìm thấy dữ liệu sản phẩm phù hợp. Bạn có thể thêm sản phẩm mới ngay bây giờ.</p>
+                            <a class="btn btn-primary btn-sm" th:href="@{/products/create}" style="margin-top: 8px;">
+                                <span>➕</span> Thêm sản phẩm ngay
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-        <!-- Pagination -->
-        <div th:if="${totalPages > 1}">
-            <ul class="pagination">
-                <li th:class="${currentPage == 0} ? 'disabled' : ''">
-                    <a th:href="@{/products(page=0, keyword=${keyword})}">« Đầu</a>
-                </li>
-                <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                    th:class="${currentPage == i} ? 'active' : ''">
-                    <a th:href="@{/products(page=${i}, keyword=${keyword})}" th:text="${i + 1}">1</a>
-                </li>
-                <li th:class="${currentPage == totalPages - 1} ? 'disabled' : ''">
-                    <a th:href="@{/products(page=${totalPages - 1}, keyword=${keyword})}">Cuối »</a>
-                </li>
-            </ul>
-        </div>
+    <!-- Pagination -->
+    <div class="pagination-wrapper" th:if="${products.totalPages > 1}">
+        <a class="pagination-item" th:if="${products.hasPrevious()}" 
+           th:href="@{/products(page=${products.number - 1},size=${size},keyword=${keyword})}">‹ Trước</a>
+        
+        <span th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}">
+            <a class="pagination-item" 
+               th:classappend="${i == products.number ? 'active' : ''}" 
+               th:href="@{/products(page=${i},size=${size},keyword=${keyword})}" 
+               th:text="${i + 1}">1</a>
+        </span>
+        
+        <a class="pagination-item" th:if="${products.hasNext()}" 
+           th:href="@{/products(page=${products.number + 1},size=${size},keyword=${keyword})}">Sau ›</a>
     </div>
 </main>
+</div>
 </body>
 </html>
